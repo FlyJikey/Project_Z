@@ -1,0 +1,136 @@
+{
+  "dns": {
+    "final": "doh",
+    "rules": [
+      {
+        "action": "predefined",
+        "query_type": [
+          "AAAA"
+        ],
+        "rcode": "NOERROR"
+      },
+      {
+        "action": "route",
+        "query_type": [
+          "A"
+        ],
+        "server": "fakeip"
+      }
+    ],
+    "servers": [
+      {
+        "detour": "proxy",
+        "server": "8.8.8.8",
+        "tag": "doh",
+        "type": "https"
+      },
+      {
+        "inet4_range": "198.18.0.0/15",
+        "tag": "fakeip",
+        "type": "fakeip"
+      }
+    ],
+    "strategy": "ipv4_only"
+  },
+  "experimental": {
+    "cache_file": {
+      "enabled": true,
+      "path": "/var/lib/projectz/sing-box-cache.db",
+      "store_fakeip": true
+    },
+    "clash_api": {
+      "external_controller": "127.0.0.1:9090",
+      "secret": "__CLASH_API_SECRET_0123456789__"
+    }
+  },
+  "inbounds": [
+    {
+      "address": [
+        "172.19.0.1/30",
+        "fdfe:dcba:9876::1/126"
+      ],
+      "auto_route": true,
+      "dns_mode": "disabled",
+      "mtu": 1500,
+      "route_exclude_address": [
+        "203.0.113.10/32",
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        "169.254.0.0/16",
+        "fc00::/7",
+        "fe80::/10"
+      ],
+      "stack": "system",
+      "strict_route": true,
+      "tag": "tun-in",
+      "type": "tun"
+    }
+  ],
+  "log": {
+    "level": "info",
+    "timestamp": true
+  },
+  "outbounds": [
+    {
+      "password": "__XRAY_SOCKS_PASSWORD__",
+      "server": "127.0.0.1",
+      "server_port": 10808,
+      "tag": "xray",
+      "type": "socks",
+      "username": "__XRAY_SOCKS_USER__",
+      "version": "5"
+    },
+    {
+      "detour": "xray",
+      "network": "tcp",
+      "password": "__PROXY1_PASSWORD__",
+      "server": "198.51.100.11",
+      "server_port": 1080,
+      "tag": "proxy-p1",
+      "type": "socks",
+      "username": "__PROXY1_USER__",
+      "version": "5"
+    },
+    {
+      "detour": "xray",
+      "password": "__PROXY2_PASSWORD__",
+      "server": "198.51.100.12",
+      "server_port": 8080,
+      "tag": "proxy-p2",
+      "type": "http",
+      "username": "__PROXY2_USER__"
+    },
+    {
+      "default": "proxy-p1",
+      "interrupt_exist_connections": true,
+      "outbounds": [
+        "proxy-p1",
+        "proxy-p2"
+      ],
+      "tag": "proxy",
+      "type": "selector"
+    }
+  ],
+  "route": {
+    "auto_detect_interface": false,
+    "final": "proxy",
+    "rules": [
+      {
+        "action": "sniff"
+      },
+      {
+        "action": "hijack-dns",
+        "protocol": "dns"
+      },
+      {
+        "action": "reject",
+        "ip_version": 6
+      },
+      {
+        "action": "reject",
+        "network": "udp"
+      }
+    ]
+  }
+}

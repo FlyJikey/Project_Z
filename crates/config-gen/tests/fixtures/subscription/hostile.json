@@ -1,0 +1,116 @@
+[
+  {
+    "remarks": "00 file paths and junk",
+    "api": { "tag": "api", "services": ["HandlerService"] },
+    "policy": { "levels": { "0": { "handshake": 1 } } },
+    "stats": {},
+    "unknownTopLevel": 1,
+    "outbounds": [
+      {
+        "tag": "ok-1",
+        "protocol": "vless",
+        "sendThrough": "10.0.0.1",
+        "settings": { "address": "files.example.com", "port": 443, "id": "52526adb-b6c9-45cc-9a47-a3064887a02d", "encryption": "none", "flow": "xtls-rprx-vision", "evilField": "x" },
+        "streamSettings": {
+          "network": "tcp", "security": "tls",
+          "tlsSettings": {
+            "serverName": "files.example.com",
+            "certificates": [ { "certificateFile": "/etc/ssl/evil.crt", "keyFile": "/etc/ssl/evil.key" } ],
+            "masterKeyLog": "/tmp/keys.log"
+          },
+          "sockopt": { "interface": "utun9", "mark": 1, "customSockopt": [ { "level": "1", "opt": "2", "value": "3" } ] },
+          "bogusStream": true
+        }
+      },
+      { "tag": "ok-2", "protocol": "loopback", "settings": { "inboundTag": "socks" } },
+      { "tag": "ok-3", "protocol": "dns", "settings": {} },
+      { "tag": "ok-4", "protocol": "wireguard", "settings": { "secretKey": "WG-SECRET-PLACEHOLDER" } },
+      { "tag": "ok-5", "protocol": "vless", "settings": { "address": "/var/run/xray.sock", "port": 1, "id": "52526adb-b6c9-45cc-9a47-a3064887a02d", "encryption": "none" } },
+      { "tag": "ok-6", "protocol": "freedom", "settings": { "redirect": "127.0.0.1:22" } }
+    ],
+    "routing": { "balancers": [ { "tag": "b", "selector": ["ok-"] } ] }
+  },
+  {
+    "remarks": "01 allowInsecure",
+    "outbounds": [
+      {
+        "tag": "ai-1", "protocol": "trojan",
+        "settings": { "address": "insecure.example.com", "port": 443, "password": "INSECURE-PASSWORD-PLACEHOLDER" },
+        "streamSettings": { "network": "tcp", "security": "tls", "tlsSettings": { "allowInsecure": true } }
+      },
+      {
+        "tag": "ai-2", "protocol": "trojan",
+        "settings": { "address": "secure.example.com", "port": 443, "password": "SECURE-PASSWORD-PLACEHOLDER" },
+        "streamSettings": { "network": "tcp", "security": "tls", "tlsSettings": { "allowInsecure": false } }
+      }
+    ]
+  },
+  {
+    "remarks": "02 only allowInsecure",
+    "outbounds": [
+      {
+        "tag": "x", "protocol": "trojan",
+        "settings": { "address": "insecure.example.com", "port": 443, "password": "INSECURE-PASSWORD-PLACEHOLDER" },
+        "streamSettings": { "network": "tcp", "security": "tls", "tlsSettings": { "AllowInsecure": "true" } }
+      }
+    ]
+  },
+  {
+    "remarks": "03 dialerProxy cycle",
+    "outbounds": [
+      { "tag": "cy-a", "protocol": "trojan", "settings": { "address": "a.example.com", "port": 443, "password": "CYCLE-PASSWORD-PLACEHOLDER" }, "streamSettings": { "security": "tls", "sockopt": { "dialerProxy": "cy-b" } } },
+      { "tag": "cy-b", "protocol": "trojan", "settings": { "address": "b.example.com", "port": 443, "password": "CYCLE-PASSWORD-PLACEHOLDER" }, "streamSettings": { "security": "tls", "sockopt": { "dialerProxy": "cy-a" } } },
+      { "tag": "cy-self", "protocol": "trojan", "settings": { "address": "s.example.com", "port": 443, "password": "CYCLE-PASSWORD-PLACEHOLDER" }, "streamSettings": { "security": "tls", "sockopt": { "dialerProxy": "cy-self" } } }
+    ]
+  },
+  {
+    "remarks": "04 proxySettings legacy chain",
+    "outbounds": [
+      { "tag": "ps-exit", "protocol": "trojan", "settings": { "address": "exit.example.com", "port": 443, "password": "PS-PASSWORD-PLACEHOLDER" }, "streamSettings": { "security": "tls" }, "proxySettings": { "tag": "ps-hop", "transportLayer": true } },
+      { "tag": "ps-hop", "protocol": "trojan", "settings": { "address": "hop.example.com", "port": 443, "password": "PS-PASSWORD-PLACEHOLDER" }, "streamSettings": { "security": "tls" } },
+      { "tag": "ps-conflict", "protocol": "trojan", "settings": { "address": "c.example.com", "port": 443, "password": "PS-PASSWORD-PLACEHOLDER" }, "streamSettings": { "security": "tls", "sockopt": { "dialerProxy": "ps-hop" } }, "proxySettings": { "tag": "ps-exit" } }
+    ],
+    "routing": { "balancers": [ { "selector": ["ps-"] } ] }
+  },
+  {
+    "remarks": "05 legacy forms",
+    "outbounds": [
+      { "tag": "lg-trojan", "protocol": "trojan", "settings": { "servers": [ { "address": "Legacy.Example.COM.", "port": "443", "password": "LEGACY-PASSWORD-PLACEHOLDER" } ] }, "streamSettings": { "security": "tls" } },
+      { "tag": "lg-vmess", "protocol": "vmess", "settings": { "vnext": [ { "address": "198.51.100.9", "port": 8443, "users": [ { "id": "e143a334-6845-4895-853f-093c39ab356b", "alterId": 0, "security": "aes-128-gcm", "level": 0 } ] } ] } },
+      { "tag": "lg-two", "protocol": "trojan", "settings": { "servers": [ { "address": "a.example.com", "port": 443, "password": "x" }, { "address": "b.example.com", "port": 443, "password": "y" } ] }, "streamSettings": { "security": "tls" } }
+    ]
+  },
+  {
+    "remarks": "06 unknown protocol only",
+    "outbounds": [ { "tag": "wg", "protocol": "wireguard", "settings": { "secretKey": "WG-SECRET-PLACEHOLDER" } }, { "tag": "direct", "protocol": "freedom" } ]
+  },
+  42,
+  null,
+  { "remarks": "08 no outbounds" },
+  {
+    "remarks": "09 freedom selected by empty prefix",
+    "outbounds": [
+      { "tag": "direct", "protocol": "freedom" },
+      { "tag": "fz-trojan", "protocol": "trojan", "settings": { "address": "fz.example.com", "port": 443, "password": "FZ-PASSWORD-PLACEHOLDER" }, "streamSettings": { "security": "tls" } }
+    ],
+    "routing": { "balancers": [ { "tag": "all", "selector": [""] } ] }
+  },
+  {
+    "remarks": "10 plaintext and bad transports",
+    "outbounds": [
+      { "tag": "pt-vless", "protocol": "vless", "settings": { "address": "plain.example.com", "port": 80, "id": "52526adb-b6c9-45cc-9a47-a3064887a02d", "encryption": "none" } },
+      { "tag": "pt-ws-reality", "protocol": "vless", "settings": { "address": "wr.example.com", "port": 443, "id": "52526adb-b6c9-45cc-9a47-a3064887a02d", "encryption": "none" }, "streamSettings": { "network": "ws", "security": "reality", "realitySettings": { "serverName": "wr.example.com", "password": "22N5CfHXOd5uVoEPntAVNd47bq75-YyX9tha_PMPfxg", "shortId": "ab" } } },
+      { "tag": "pt-kcp", "protocol": "vmess", "settings": { "address": "kcp.example.com", "port": 443, "id": "52526adb-b6c9-45cc-9a47-a3064887a02d" }, "streamSettings": { "network": "kcp" } },
+      { "tag": "pt-dl", "protocol": "vless", "settings": { "address": "dl.example.com", "port": 443, "id": "52526adb-b6c9-45cc-9a47-a3064887a02d", "encryption": "none" }, "streamSettings": { "network": "xhttp", "security": "tls", "xhttpSettings": { "path": "/", "extra": { "downloadSettings": { "address": "other.example.com", "port": 443 } } } } },
+      { "tag": "pt-mask", "protocol": "vless", "settings": { "address": "mask.example.com", "port": 443, "id": "52526adb-b6c9-45cc-9a47-a3064887a02d", "encryption": "none" }, "streamSettings": { "security": "tls", "finalmask": { "tcp": [ { "type": "sudoku", "settings": {} } ] } } },
+      { "tag": "pt-ok", "protocol": "vless", "settings": { "address": "ok.example.com", "port": 443, "id": "52526adb-b6c9-45cc-9a47-a3064887a02d", "encryption": "none" }, "streamSettings": { "security": "tls" } }
+    ]
+  },
+  {
+    "remarks": "11 fragment via finalmask and lengths",
+    "outbounds": [
+      { "tag": "fm-vless", "protocol": "vless", "settings": { "address": "fm.example.com", "port": 443, "id": "52526adb-b6c9-45cc-9a47-a3064887a02d", "encryption": "none" }, "streamSettings": { "security": "tls", "sockopt": { "dialerProxy": "frag" } } },
+      { "tag": "frag", "protocol": "freedom", "settings": {}, "streamSettings": { "finalmask": { "tcp": [ { "type": "fragment", "settings": { "packets": "tlshello", "lengths": ["3-5"], "delays": ["10-20"], "maxSplit": "3-6" } }, { "type": "noise", "settings": {} } ] } } }
+    ]
+  }
+]

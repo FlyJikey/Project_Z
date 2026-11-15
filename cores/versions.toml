@@ -1,0 +1,28 @@
+# Зафиксированные версии ядер (ТЗ §3). Смена версии — отдельный коммит
+# с прогоном проверки конфигов ядрами и теста утечек (ТЗ §15).
+# SHA-256 — суммы релизных архивов; сверены 2026-11-15 с .dgst (Xray)
+# и полем digest GitHub API (sing-box).
+
+[xray]
+version = "26.11.9"
+base_url = "https://github.com/XTLS/Xray-core/releases/download/v26.11.9"
+
+[xray.darwin-amd64]
+file = "Xray-macos-64.zip"
+sha256 = "488963e676e06f5e48547f9dd38116aaca8de4234959b4272ae8f284e658dfd0"
+
+[sing-box]
+version = "1.14.4"
+base_url = "https://github.com/SagerNet/sing-box/releases/download/v1.14.4"
+
+[sing-box.darwin-amd64]
+file = "sing-box-1.14.4-darwin-amd64.tar.gz"
+sha256 = "eae86b9b033bba50b7c44ab719e4bfac0aca05efd28483390ed3aa510f32db25"
+
+[sing-box.darwin-arm64]
+file = "sing-box-1.14.4-darwin-arm64.tar.gz"
+sha256 = "0d8c7f5ed5d587b0f1a5e9772a708ec3bfa4ac4c9329604b01d8d9c2ba406838"
+
+[sing-box.windows-amd64]
+file = "sing-box-1.14.4-windows-amd64.zip"
+sha256 = "99185d75d314a07dbba4a130c8ad986cbeb629a07927975636b341ca61f991df"

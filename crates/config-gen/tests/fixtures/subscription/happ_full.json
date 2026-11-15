@@ -1,0 +1,141 @@
+[
+  {
+    "remarks": "🇩🇪 Germany #1",
+    "dns": { "servers": ["77.88.8.8", "https://common.dot.dns.yandex.net/dns-query"], "queryStrategy": "UseIPv4" },
+    "inbounds": [ { "tag": "socks", "port": 10808, "listen": "0.0.0.0", "protocol": "socks", "settings": { "auth": "noauth", "udp": true } } ],
+    "log": { "access": "/var/log/xray/access.log", "loglevel": "debug" },
+    "outbounds": [
+      {
+        "tag": "de-reality",
+        "protocol": "vless",
+        "settings": { "address": "de1.example.com", "port": 443, "id": "49e24ff0-cdfc-417e-9a01-f1687647e767", "encryption": "none", "flow": "xtls-rprx-vision", "level": 0 },
+        "streamSettings": {
+          "network": "tcp",
+          "security": "reality",
+          "realitySettings": { "serverName": "www.example.com", "fingerprint": "chrome", "publicKey": "22N5CfHXOd5uVoEPntAVNd47bq75-YyX9tha_PMPfxg", "shortId": "0123456789abcdef", "spiderX": "/" },
+          "sockopt": { "mark": 255, "interface": "eth0", "tcpFastOpen": true, "domainStrategy": "UseIPv4" }
+        },
+        "mux": { "enabled": false }
+      },
+      {
+        "tag": "de-xhttp",
+        "protocol": "vless",
+        "settings": { "address": "cdn-de.example.com", "port": 443, "id": "c32c8fdc-face-4527-9c7d-86d1cfbfda94", "encryption": "none" },
+        "streamSettings": {
+          "network": "xhttp",
+          "security": "tls",
+          "tlsSettings": { "fingerprint": "chrome", "alpn": ["h2"] },
+          "xhttpSettings": {
+            "path": "/xh",
+            "mode": "auto",
+            "extra": { "xPaddingBytes": "100-1000", "noGRPCHeader": false, "xmux": { "maxConcurrency": "16-32", "cMaxReuseTimes": 0, "hMaxReusableSecs": "1800-3000" } }
+          }
+        }
+      },
+      {
+        "tag": "de-hy",
+        "protocol": "hysteria",
+        "settings": { "version": 2, "address": "203.0.113.50", "port": 8443 },
+        "streamSettings": {
+          "network": "hysteria",
+          "security": "tls",
+          "tlsSettings": { "serverName": "hy.example.com", "alpn": ["h3"] },
+          "hysteriaSettings": { "version": 2, "auth": "hy-auth-PLACEHOLDER-1", "udpIdleTimeout": 60 },
+          "finalmask": { "quicParams": { "brutalUp": "50 mbps" } }
+        }
+      },
+      {
+        "tag": "de-frag",
+        "protocol": "vless",
+        "settings": { "vnext": [ { "address": "frag.example.com", "port": 443, "users": [ { "id": "a87fcb69-7705-4a6e-bd81-e6d572208210", "encryption": "none", "level": 0 } ] } ] },
+        "streamSettings": {
+          "network": "raw",
+          "security": "tls",
+          "tlsSettings": { "serverName": "frag.example.com", "fingerprint": "firefox" },
+          "sockopt": { "dialerProxy": "fragment" }
+        }
+      },
+      {
+        "tag": "fragment",
+        "protocol": "freedom",
+        "settings": { "domainStrategy": "AsIs", "fragment": { "packets": "tlshello", "length": "100-200", "interval": "10-20" } },
+        "streamSettings": { "sockopt": { "tcpNoDelay": true } }
+      },
+      { "tag": "direct", "protocol": "freedom", "settings": {} },
+      { "tag": "block", "protocol": "blackhole", "settings": { "response": { "type": "http" } } },
+      { "tag": "dns-out", "protocol": "dns", "settings": { "address": "77.88.8.8" } }
+    ],
+    "routing": {
+      "domainStrategy": "IPIfNonMatch",
+      "rules": [
+        { "type": "field", "domain": ["geosite:category-ru", "domain:yandex.ru", "ext:/etc/xray/ru.dat:ru"], "outboundTag": "direct" },
+        { "type": "field", "ip": ["geoip:ru", "geoip:private"], "outboundTag": "direct" },
+        { "type": "field", "protocol": ["bittorrent"], "outboundTag": "block" }
+      ],
+      "balancers": [ { "tag": "balancer", "selector": ["de-"], "strategy": { "type": "leastPing" }, "fallbackTag": "de-reality" } ]
+    },
+    "burstObservatory": {
+      "subjectSelector": ["de-"],
+      "pingConfig": { "destination": "https://probe.example.net/generate_204", "connectivity": "", "interval": "30s", "sampling": 5, "timeout": "4s" }
+    }
+  },
+  {
+    "remarks": "🇺🇸 USA (bridge)",
+    "outbounds": [
+      {
+        "tag": "us-bridge-1",
+        "protocol": "vless",
+        "settings": { "address": "bridge.example.com", "port": 443, "id": "9bee537c-a1e0-4ac6-bf36-b88ce7f4d112", "encryption": "none", "flow": "xtls-rprx-vision" },
+        "streamSettings": {
+          "network": "tcp", "security": "reality",
+          "realitySettings": { "serverName": "bridge-front.example.com", "fingerprint": "chrome", "password": "8G1ip5xc6YHbWk-S0EpR5DyFAKTpD_Hai4a0q1XxvC0", "shortId": "abcd" }
+        }
+      },
+      {
+        "tag": "us-exit-1",
+        "protocol": "vless",
+        "settings": { "address": "exit.example.com", "port": 443, "id": "2e9a133c-1ace-46c6-a2ae-883ce30f52cb", "encryption": "none", "flow": "xtls-rprx-vision" },
+        "streamSettings": {
+          "network": "tcp", "security": "reality",
+          "realitySettings": { "serverName": "exit-front.example.com", "fingerprint": "chrome", "password": "22UjhJJPCuiUL-DmIVnKy4vYbuV9W0h0QP_FmpLPVVk", "shortId": "" },
+          "sockopt": { "dialerProxy": "us-bridge-1" }
+        }
+      },
+      { "tag": "direct", "protocol": "freedom" }
+    ],
+    "routing": { "rules": [ { "type": "field", "inboundTag": ["socks"], "outboundTag": "direct" } ], "balancers": [ { "tag": "bal", "selector": ["us-exit"] } ] },
+    "burstObservatory": { "subjectSelector": ["us-exit"], "pingConfig": { "interval": "1m" } }
+  },
+  {
+    "remarks": "📱 Mobile (no balancer)",
+    "outbounds": [
+      {
+        "tag": "mob-trojan",
+        "protocol": "trojan",
+        "settings": { "servers": [ { "address": "trojan.example.com", "port": 443, "password": "TROJAN-PASSWORD-PLACEHOLDER", "level": 0 } ] },
+        "streamSettings": { "network": "grpc", "security": "tls", "tlsSettings": { "serverName": "trojan.example.com", "fingerprint": "chrome" }, "grpcSettings": { "serviceName": "tr", "multiMode": true } }
+      },
+      {
+        "tag": "mob-ss",
+        "protocol": "shadowsocks",
+        "settings": { "servers": [ { "address": "198.51.100.7", "port": 8388, "method": "2022-blake3-aes-128-gcm", "password": "AAECAwQFBgcICQoLDA0ODw==" } ] }
+      },
+      { "tag": "direct", "protocol": "freedom" },
+      { "tag": "block", "protocol": "blackhole" }
+    ],
+    "routing": { "rules": [ { "type": "field", "domain": ["geosite:ru"], "outboundTag": "direct" } ] }
+  },
+  {
+    "remarks": "Observatory only",
+    "outbounds": [
+      {
+        "tag": "obs-vmess-ws",
+        "protocol": "vmess",
+        "settings": { "vnext": [ { "address": "ws.example.com", "port": 443, "users": [ { "id": "b8cea2f8-32c0-402e-a98c-4910b21e6b20", "security": "auto", "alterId": 0 } ] } ] },
+        "streamSettings": { "network": "ws", "security": "tls", "tlsSettings": { "serverName": "ws.example.com" }, "wsSettings": { "path": "/ws", "headers": { "User-Agent": "Mozilla/5.0" } } }
+      },
+      { "tag": "direct", "protocol": "freedom" }
+    ],
+    "observatory": { "subjectSelector": ["obs-"], "probeUrl": "https://www.google.com/generate_204", "probeInterval": "30s" }
+  }
+]

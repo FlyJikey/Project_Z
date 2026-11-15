@@ -1,0 +1,19 @@
+[package]
+name = "config-gen"
+description = "Разбор подписок и генерация конфигов ядер, чистые функции (ТЗ §3, §5)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+ipc-proto.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+url.workspace = true
+ipnet.workspace = true
+
+[lints]
+workspace = true
